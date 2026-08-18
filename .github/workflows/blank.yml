@@ -4,12 +4,12 @@ permissions:
   contents: write
 jobs:
   rewrite:
-    if: github.repository != 'biolprogramming/found-codespace'
+    if: github.repository != 'biolprogramming/foundations-codespace'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: |
-          sed -i "s|codespaces.new/biolprogramming/found-codespace|codespaces.new/${{ github.repository }}|g" README.md
+          sed -i "s|codespaces.new/biolprogramming/foundations-codespace|codespaces.new/${{ github.repository }}|g" README.md
           rm -f .github/workflows/init.yml
           git config user.name github-actions
           git config user.email github-actions@github.com
