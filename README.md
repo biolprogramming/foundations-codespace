@@ -1,4 +1,4 @@
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/biolprogramming/found-codespace?quickstart=1)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/biolprogramming/foundations-codespace?quickstart=1)
 
 # Foundations Codespace
 
