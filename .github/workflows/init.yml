@@ -1,16 +1,45 @@
-name: Init template
+name: Initialize student repository
 on: push
 permissions:
   contents: write
 jobs:
-  rewrite:
+  personalize:
+    # Never run in the instructor's template repo itself.
     if: github.repository != 'biolprogramming/foundations-codespace'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          sed -i "s|codespaces.new/biolprogramming/foundations-codespace|codespaces.new/${{ github.repository }}|g" README.md
-          rm -f .github/workflows/init.yml
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git commit -am "Initialize from template" && git push
+
+      - name: Gather student details
+        id: who
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          owner='${{ github.repository_owner }}'
+          # .name can be null if the student never set a display name
+          name="$(gh api "/users/$owner" --jq '.name // .login')"
+          {
+            echo "login=$owner"
+            echo "name=$name"
+            echo "avatar=https://github.com/$owner.png?size=120"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Render README
+        run: |
+          [ -f .github/template/README.template.md ] || exit 0
+          sed \
+            -e "s|{{NAME}}|${{ steps.who.outputs.name }}|g" \
+            -e "s|{{LOGIN}}|${{ steps.who.outputs.login }}|g" \
+            -e "s|{{AVATAR}}|${{ steps.who.outputs.avatar }}|g" \
+            -e "s|{{REPO}}|${{ github.repository }}|g" \
+            .github/template/README.template.md > README.md
+
+      - name: Clean up and commit
+        run: |
+          rm -rf .github/template .github/workflows/init.yml
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m 'Personalize repository from course template'
+          git push
