@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-COURSE_REPO="${COURSE_REPO:-biolprogramming/found-materials}"
+COURSE_REPO="${COURSE_REPO:-biolprogramming/foundations-materials}"
 COURSE_REF="${COURSE_REF:-main}"
 
 # Where to put things: the Codespace workspace folder, else the current dir.
