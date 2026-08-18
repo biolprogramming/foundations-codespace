@@ -11,11 +11,21 @@
 
 set -euo pipefail
 
-COURSE_REPO="${COURSE_REPO:-biolprogramming/foundations-materials}"
+COURSE_REPO="${COURSE_REPO:-biolprogramming/found-materials}"
 COURSE_REF="${COURSE_REF:-main}"
 
 # Where to put things: the Codespace workspace folder, else the current dir.
 DEST_ROOT="${CODESPACE_VSCODE_FOLDER:-$PWD}"
+
+# Single temp dir for the run, cleaned up by one top-level trap.
+# It must NOT be `local` — the EXIT trap fires after functions have returned.
+TMPROOT=""
+cleanup() {
+  if [ -n "$TMPROOT" ] && [ -d "$TMPROOT" ]; then
+    rm -rf "$TMPROOT"
+  fi
+}
+trap cleanup EXIT
 
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
@@ -26,23 +36,23 @@ usage() {
 
 # --- fetch the materials repo into a temp dir -------------------------------
 
+# Downloads the materials repo into $TMPROOT. Sets a global rather than
+# echoing a path, because command substitution would run this in a subshell
+# and the assignment would be lost.
 fetch_repo() {
-  local tmp
-  tmp="$(mktemp -d)"
+  TMPROOT="$(mktemp -d)"
   local url="https://codeload.github.com/${COURSE_REPO}/tar.gz/refs/heads/${COURSE_REF}"
   if ! curl -fsSL --retry 3 --max-time 120 "$url" \
-       | tar -xz -C "$tmp" --strip-components=1; then
-    rm -rf "$tmp"
+       | tar -xz -C "$TMPROOT" --strip-components=1; then
     die "could not download ${COURSE_REPO}@${COURSE_REF} — check your network and try again"
   fi
-  printf '%s' "$tmp"
 }
 
 # --- subcommands ------------------------------------------------------------
 
 cmd_list() {
-  local tmp; tmp="$(fetch_repo)"
-  trap 'rm -rf "$tmp"' EXIT
+  fetch_repo
+  local tmp="$TMPROOT"
   echo "Available in ${COURSE_REPO}:"
   for d in lectures homework; do
     [ -d "$tmp/$d" ] || continue
@@ -65,8 +75,8 @@ cmd_get() {
   local padded; padded="$(printf '%02d' "$((10#$num))")"
   local name="${prefix}${padded}"
 
-  local tmp; tmp="$(fetch_repo)"
-  trap 'rm -rf "$tmp"' EXIT
+  fetch_repo
+  local tmp="$TMPROOT"
 
   local src="$tmp/$subdir/$name"
   [ -d "$src" ] || die "$subdir/$name does not exist yet — try 'course-get list'"
