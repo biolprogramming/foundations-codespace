@@ -1,3 +1,5 @@
 pandas==2.2.3
 biopython==1.85
 plotnine==0.15.8
+ipykernel==7.3.0
+ipython==9.16.1
