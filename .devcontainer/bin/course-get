@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+#
+# course-get — download lecture or homework materials into your workspace.
+#
+#   course-get lecture 3        # fetch lectures/lecture03/
+#   course-get homework 5       # fetch homework/hw05/
+#   course-get list             # show what's available
+#   course-get lecture 3 --force  # re-download, overwriting your edits
+#
+# Files you have already edited are never overwritten unless --force is given.
+
+set -euo pipefail
+
+COURSE_REPO="${COURSE_REPO:-biolprogramming/foundations-materials}"
+COURSE_REF="${COURSE_REF:-main}"
+
+# Where to put things: the Codespace workspace folder, else the current dir.
+DEST_ROOT="${CODESPACE_VSCODE_FOLDER:-$PWD}"
+
+die() { printf 'error: %s\n' "$*" >&2; exit 1; }
+
+usage() {
+  sed -n '3,10p' "$0" | sed 's/^# \{0,1\}//'
+  exit "${1:-0}"
+}
+
+# --- fetch the materials repo into a temp dir -------------------------------
+
+fetch_repo() {
+  local tmp
+  tmp="$(mktemp -d)"
+  local url="https://codeload.github.com/${COURSE_REPO}/tar.gz/refs/heads/${COURSE_REF}"
+  if ! curl -fsSL --retry 3 --max-time 120 "$url" \
+       | tar -xz -C "$tmp" --strip-components=1; then
+    rm -rf "$tmp"
+    die "could not download ${COURSE_REPO}@${COURSE_REF} — check your network and try again"
+  fi
+  printf '%s' "$tmp"
+}
+
+# --- subcommands ------------------------------------------------------------
+
+cmd_list() {
+  local tmp; tmp="$(fetch_repo)"
+  trap 'rm -rf "$tmp"' EXIT
+  echo "Available in ${COURSE_REPO}:"
+  for d in lectures homework; do
+    [ -d "$tmp/$d" ] || continue
+    echo
+    echo "  $d/"
+    find "$tmp/$d" -mindepth 1 -maxdepth 1 -type d -printf '    %f\n' | sort
+  done
+}
+
+cmd_get() {
+  local kind="$1" num="$2" force="$3"
+  local subdir prefix
+  case "$kind" in
+    lecture|lectures)   subdir="lectures"; prefix="lecture" ;;
+    homework|hw|assignment) subdir="homework"; prefix="hw" ;;
+    *) die "unknown material type '$kind' (expected 'lecture' or 'homework')" ;;
+  esac
+
+  [[ "$num" =~ ^[0-9]+$ ]] || die "'$num' is not a number"
+  local padded; padded="$(printf '%02d' "$((10#$num))")"
+  local name="${prefix}${padded}"
+
+  local tmp; tmp="$(fetch_repo)"
+  trap 'rm -rf "$tmp"' EXIT
+
+  local src="$tmp/$subdir/$name"
+  [ -d "$src" ] || die "$subdir/$name does not exist yet — try 'course-get list'"
+
+  local dest="$DEST_ROOT/$subdir/$name"
+  mkdir -p "$dest"
+
+  if [ "$force" = "yes" ]; then
+    cp -R "$src/." "$dest/"
+    echo "Overwrote $subdir/$name with a fresh copy."
+  else
+    # -n = never clobber: new files land, your edited files are left alone.
+    cp -Rn "$src/." "$dest/" 2>/dev/null || true
+    echo "Updated $subdir/$name (existing files left untouched)."
+  fi
+
+  echo
+  echo "Files now in $subdir/$name:"
+  find "$dest" -mindepth 1 -maxdepth 1 -printf '  %f\n' | sort
+}
+
+# --- argument parsing -------------------------------------------------------
+
+[ $# -ge 1 ] || usage 1
+
+force="no"
+args=()
+for a in "$@"; do
+  case "$a" in
+    --force|-f)   force="yes" ;;
+    --help|-h)    usage 0 ;;
+    *)            args+=("$a") ;;
+  esac
+done
+
+case "${args[0]:-}" in
+  list) cmd_list ;;
+  "")   usage 1 ;;
+  *)
+    [ "${#args[@]}" -ge 2 ] || die "missing number — e.g. 'course-get lecture 3'"
+    cmd_get "${args[0]}" "${args[1]}" "$force"
+    ;;
+esac
