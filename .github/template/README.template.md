@@ -1,8 +1,9 @@
 # Foundations of Computing for Biologists
 
-<img src="{{AVATAR}}" align="right" width="120" alt="{{LOGIN}}">
+| {{NAME}}'s workspace  | <img src="{{AVATAR}}" width="120" alt="{{LOGIN}}"> |
+| :---         |         ---: |
 
-### {{NAME}}'s workspace
+### 
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/{{REPO}}?quickstart=1)
 
