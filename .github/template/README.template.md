@@ -29,8 +29,7 @@ clean copy.
 
 ## Turning work in
 
-Assignments are submitted through Gradescope, not here. Download your files from
-the Codespace file explorer and upload them before the Tuesday 9 AM deadline.
+Please submit your assignments through Moodle, not here. So, the workflow is, use `course-get homework X` to download your homework files from the Codespace file explorer. Then upload the relevant files before the deadline (which will be just before class starts).
 
 ---
 
