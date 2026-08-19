@@ -1,6 +1,6 @@
-<img src="{{AVATAR}}" align="right" width="120" alt="{{LOGIN}}">
-
 # Foundations of Computing for Biologists
+
+<img src="{{AVATAR}}" align="right" width="120" alt="{{LOGIN}}">
 
 ### {{NAME}}'s workspace
 
