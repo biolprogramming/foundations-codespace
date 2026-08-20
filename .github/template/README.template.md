@@ -30,7 +30,13 @@ clean copy.
 
 ## Turning work in
 
-Please submit your assignments through Moodle, not here. So, the workflow is, use `course-get homework X` to download your homework files from the Codespace file explorer. Then upload the relevant files before the deadline (which will be just before class starts).
+Please submit your assignments through Moodle, not here. So, the workflow is, use `course-get homework X` to download your homework files from the Codespace file explorer. Then upload the relevant files for a given assignment [to moodle][] before the deadline (which will be just before class starts).
+
+[1]: https://moodle.lsu.edu/course/section.php?id=1073529
+
+## Syllabus
+
+[Course syllabus][https://github.com/biolprogramming/foundations-syllabus]
 
 ---
 
